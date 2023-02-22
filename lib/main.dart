@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:focus_chain/expense_screen/expense_screen.dart';
 import 'package:focus_chain/income_screen/income_screen.dart';
 import 'package:focus_chain/states/app_state.dart';
-import 'package:focus_chain/states/catalog_state.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -30,16 +29,26 @@ class MyApp extends StatelessWidget {
     return Shortcuts(
       shortcuts: {
         LogicalKeySet(LogicalKeyboardKey.shift): ShiftIntent(),
+        LogicalKeySet(LogicalKeyboardKey.escape): EscapeIntent(),
       },
       child: Actions(
         actions: {
           ShiftIntent: CallbackAction<ShiftIntent>(
             onInvoke: (intent) {
-              print("invoke");
+              debugPrint("invoke");
               IFocusableWidget? widget =
                   Provider.of<AppState>(context, listen: false)
                       .getScreenWidgetHandler();
-              widget?.handle(LogicalKeyboardKey.shift, context);
+              widget?.handle(LogicalKeyboardKey.shift);
+            },
+          ),
+          EscapeIntent: CallbackAction<EscapeIntent>(
+            onInvoke: (intent) {
+              debugPrint("escape intent");
+              IFocusableWidget? widget =
+                  Provider.of<AppState>(context, listen: false)
+                      .getScreenWidgetHandler();
+              widget?.handle(LogicalKeyboardKey.escape);
             },
           ),
         },
@@ -55,46 +64,6 @@ class MyApp extends StatelessWidget {
           ),
           home: const Home(),
         ),
-      ),
-    );
-  }
-}
-
-class OrderedButtonRow extends StatelessWidget {
-  const OrderedButtonRow({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FocusTraversalGroup(
-      policy: OrderedTraversalPolicy(),
-      child: Row(
-        children: <Widget>[
-          const Spacer(),
-          FocusTraversalOrder(
-            order: const NumericFocusOrder(2.0),
-            child: TextButton(
-              child: const Text('ONE'),
-              onPressed: () {},
-            ),
-          ),
-          const Spacer(),
-          FocusTraversalOrder(
-            order: const NumericFocusOrder(1.0),
-            child: TextButton(
-              child: const Text('TWO'),
-              onPressed: () {},
-            ),
-          ),
-          const Spacer(),
-          FocusTraversalOrder(
-            order: const NumericFocusOrder(3.0),
-            child: TextButton(
-              child: const Text('THREE'),
-              onPressed: () {},
-            ),
-          ),
-          const Spacer(),
-        ],
       ),
     );
   }
@@ -147,3 +116,5 @@ class _HomeState extends State<Home> {
 }
 
 class ShiftIntent extends Intent {}
+
+class EscapeIntent extends Intent {}

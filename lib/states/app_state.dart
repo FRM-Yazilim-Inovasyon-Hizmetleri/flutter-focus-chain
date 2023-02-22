@@ -13,12 +13,19 @@ class StackStructure<E> {
     return _storage.length;
   }
 
-  E pop() {
-    return _storage.removeLast();
+  E? pop() {
+    if (_storage.isNotEmpty) {
+      return _storage.removeLast();
+    }
+
+    return null;
   }
 
   E? peek() {
-    return _storage.last;
+    if (_storage.isNotEmpty) {
+      return _storage.last;
+    }
+    return null;
   }
 }
 
@@ -46,23 +53,31 @@ class ExpenseState extends ChangeNotifier implements IScreenFocusStateHandler {
 
   @override
   IFocusableWidget? getWidgetHandler() {
-    print('ExpenseState getWidgetHandler');
+    debugPrint('ExpenseState getWidgetHandler');
     IFocusableWidget? value = widgets.peek();
     return value;
   }
 
   @override
-  IFocusableWidget? pop() {
-    print('ExpenseState pop');
-    IFocusableWidget value = widgets.pop();
-    value.focus();
+  IFocusableWidget? pop(BuildContext context) {
+    debugPrint('ExpenseState pop');
+    IFocusableWidget? value = widgets.pop();
+    IFocusableWidget? current = widgets.peek();
+    current?.focus();
+    if (current == null) {
+      Navigator.pop(context);
+    }
+
     return value;
   }
 
   @override
   void push(IFocusableWidget widget) {
+    debugPrint('ExpenseState push widgets count is ${widgets.count()}');
+    if (widgets.count() == 0) {
+      widget.focus();
+    }
     widgets.push(widget);
-    print('ExpenseState push widgets count is ${widgets.count()}');
   }
 }
 
@@ -70,15 +85,10 @@ abstract class IScreenFocusStateHandler {
   IFocusableWidget? getWidgetHandler();
 
   void push(IFocusableWidget widget);
-  IFocusableWidget? pop();
+  IFocusableWidget? pop(BuildContext context);
 }
 
 abstract class IFocusableWidget {
-  final IFocusableWidget? prev;
-  final IFocusableWidget? next;
-
-  IFocusableWidget(this.prev, this.next);
-
-  void handle(LogicalKeyboardKey pressedKey, BuildContext context);
+  void handle(LogicalKeyboardKey pressedKey);
   void focus();
 }

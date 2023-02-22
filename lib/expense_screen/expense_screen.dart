@@ -14,7 +14,7 @@ class ExpenseScreen extends StatefulWidget {
 class _ExpenseScreenState extends State<ExpenseScreen> {
   @override
   void initState() {
-    print("Expense Screen initState");
+    debugPrint("Expense Screen initState");
     super.initState();
   }
 
@@ -24,14 +24,13 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     ExpenseState expenseState = Provider.of<ExpenseState>(context);
     appState.changeScreen(Screens.expense, expenseState);
 
-    return Center(
+    return Container(
+      color: Colors.amber.shade400,
       child: Stack(
         children: [
           const Text("Expense Screen"),
           CustomInput(
             handler: expenseState,
-            next: null,
-            prev: null,
           ),
           ExampleInput(
             handler: expenseState,
@@ -44,12 +43,8 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
 class CustomInput extends StatefulWidget {
   final IScreenFocusStateHandler handler;
-  @override
-  final IFocusableWidget? next;
-  @override
-  final IFocusableWidget? prev;
 
-  const CustomInput({super.key, required this.handler, this.next, this.prev});
+  const CustomInput({super.key, required this.handler});
 
   @override
   State<CustomInput> createState() => _CustomInputState();
@@ -60,24 +55,23 @@ class _CustomInputState extends State<CustomInput> implements IFocusableWidget {
   Widget build(BuildContext context) {
     return FocusDetector(
       onFocusGained: () {
-        print('CustomInput onFocusGained');
+        debugPrint('CustomInput onFocusGained');
         widget.handler.push(this);
       },
       onFocusLost: () {
-        print('CustomInput onFocusLost');
-        widget.handler.pop();
+        debugPrint('CustomInput onFocusLost');
       },
       onForegroundGained: () {
-        print('CustomInput onFocusLost');
+        debugPrint('CustomInput onFocusLost');
       },
       onForegroundLost: () {
-        print('CustomInput onForegroundLost');
+        debugPrint('CustomInput onForegroundLost');
       },
       onVisibilityGained: () {
-        print('CustomInput onVisibilityGained');
+        debugPrint('CustomInput onVisibilityGained');
       },
       onVisibilityLost: () {
-        print('CustomInput onVisibilityLost');
+        debugPrint('CustomInput onVisibilityLost');
       },
       child: Container(
         child: Text("Click"),
@@ -86,51 +80,46 @@ class _CustomInputState extends State<CustomInput> implements IFocusableWidget {
   }
 
   @override
-  void handle(LogicalKeyboardKey pressedKey, BuildContext context) {
-    print('CustomInput handle method');
-    Navigator.pop(this.context);
+  void handle(LogicalKeyboardKey pressedKey) {
+    debugPrint('CustomInput handle method ${pressedKey.debugName}');
+    if (pressedKey == LogicalKeyboardKey.escape) {
+      widget.handler.pop(context);
+    }
   }
 
   @override
   void focus() {
-    print("Custom Input focus");
+    debugPrint("Custom Input Statefull focus");
   }
-
-  @override
-  IFocusableWidget? get next => widget.next;
-
-  @override
-  IFocusableWidget? get prev => widget.prev;
 }
 
 class ExampleInput extends StatelessWidget implements IFocusableWidget {
   final IScreenFocusStateHandler handler;
+  late final BuildContext _context;
   ExampleInput({super.key, required this.handler});
 
-  late BuildContext _context;
   @override
   Widget build(BuildContext context) {
     _context = context;
     return FocusDetector(
       onFocusGained: () {
-        print('ExampleInput onFocusGained');
+        debugPrint('ExampleInput onFocusGained');
         handler.push(this);
       },
       onFocusLost: () {
-        print('ExampleInput onFocusLost');
-        handler.pop();
+        debugPrint('ExampleInput onFocusLost');
       },
       onForegroundGained: () {
-        print('ExampleInput onFocusLost');
+        debugPrint('ExampleInput onFocusLost');
       },
       onForegroundLost: () {
-        print('ExampleInput onForegroundLost');
+        debugPrint('ExampleInput onForegroundLost');
       },
       onVisibilityGained: () {
-        print('ExampleInput onVisibilityGained');
+        debugPrint('ExampleInput onVisibilityGained');
       },
       onVisibilityLost: () {
-        print('ExampleInput onVisibilityLost');
+        debugPrint('ExampleInput onVisibilityLost');
       },
       child: Container(
         child: Text("ExampleInput Click"),
@@ -140,20 +129,14 @@ class ExampleInput extends StatelessWidget implements IFocusableWidget {
 
   @override
   void focus() {
-    print("Example focus");
+    debugPrint("Example Input Stateless focus");
   }
 
   @override
-  void handle(LogicalKeyboardKey pressedKey, BuildContext context) {
-    print("Example Handler");
-    Navigator.pop(_context);
+  void handle(LogicalKeyboardKey pressedKey) {
+    debugPrint("Example Input handle ${pressedKey.debugName}");
+    if (pressedKey == LogicalKeyboardKey.escape) {
+      handler.pop(_context);
+    }
   }
-
-  @override
-  // TODO: implement next
-  IFocusableWidget? get next => throw UnimplementedError();
-
-  @override
-  // TODO: implement prev
-  IFocusableWidget? get prev => throw UnimplementedError();
 }
