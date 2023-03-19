@@ -24,18 +24,20 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     ExpenseState expenseState = Provider.of<ExpenseState>(context);
     appState.changeScreen(Screens.expense, expenseState);
 
-    return Container(
-      color: Colors.amber.shade400,
-      child: Stack(
-        children: [
-          const Text("Expense Screen"),
-          CustomInput(
-            handler: expenseState,
-          ),
-          ExampleInput(
-            handler: expenseState,
-          ),
-        ],
+    return Scaffold(
+      body: Container(
+        color: Colors.amber.shade400,
+        child: Column(
+          children: [
+            const Text("Expense Screen"),
+            CustomInput(
+              handler: expenseState,
+            ),
+            ExampleInput(
+              handler: expenseState,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -51,6 +53,8 @@ class CustomInput extends StatefulWidget {
 }
 
 class _CustomInputState extends State<CustomInput> implements IFocusableWidget {
+  final TextEditingController controller = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return FocusDetector(
@@ -73,8 +77,15 @@ class _CustomInputState extends State<CustomInput> implements IFocusableWidget {
       onVisibilityLost: () {
         debugPrint('CustomInput onVisibilityLost');
       },
-      child: Container(
-        child: Text("Click"),
+      child: TextField(
+        controller: controller,
+        autocorrect: false,
+        autofocus: false,
+        style: const TextStyle(
+          color: Colors.amber,
+          fontStyle: FontStyle.italic,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -95,12 +106,11 @@ class _CustomInputState extends State<CustomInput> implements IFocusableWidget {
 
 class ExampleInput extends StatelessWidget implements IFocusableWidget {
   final IScreenFocusStateHandler handler;
-  late final BuildContext _context;
+  final TextEditingController controller = TextEditingController();
   ExampleInput({super.key, required this.handler});
 
   @override
   Widget build(BuildContext context) {
-    _context = context;
     return FocusDetector(
       onFocusGained: () {
         debugPrint('ExampleInput onFocusGained');
@@ -121,8 +131,15 @@ class ExampleInput extends StatelessWidget implements IFocusableWidget {
       onVisibilityLost: () {
         debugPrint('ExampleInput onVisibilityLost');
       },
-      child: Container(
-        child: Text("ExampleInput Click"),
+      child: TextField(
+        controller: controller,
+        autocorrect: false,
+        autofocus: false,
+        style: const TextStyle(
+          color: Colors.amber,
+          fontStyle: FontStyle.italic,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -136,7 +153,8 @@ class ExampleInput extends StatelessWidget implements IFocusableWidget {
   void handle(LogicalKeyboardKey pressedKey) {
     debugPrint("Example Input handle ${pressedKey.debugName}");
     if (pressedKey == LogicalKeyboardKey.escape) {
-      handler.pop(_context);
+    } else if (pressedKey == LogicalKeyboardKey.enter) {
+      handler.next();
     }
   }
 }

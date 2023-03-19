@@ -21,11 +21,30 @@ void main() {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    FocusManager.instance.addListener(() {
+      FocusManager.instance.primaryFocus?.context?.widget.key;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    AppState state = Provider.of<AppState>(context, listen: false);
+    state.addNavigationListener(() {
+      debugPrint('Shift Intent Navigation Listener');
+      Navigator.pop(context);
+      //FocusScope.of(context).previousFocus();
+    });
     return Shortcuts(
       shortcuts: {
         LogicalKeySet(LogicalKeyboardKey.shift): ShiftIntent(),
@@ -36,18 +55,17 @@ class MyApp extends StatelessWidget {
           ShiftIntent: CallbackAction<ShiftIntent>(
             onInvoke: (intent) {
               debugPrint("invoke");
-              IFocusableWidget? widget =
-                  Provider.of<AppState>(context, listen: false)
-                      .getScreenWidgetHandler();
+              AppState state = Provider.of<AppState>(context, listen: false);
+
+              IFocusableWidget? widget = state.getScreenWidgetHandler();
               widget?.handle(LogicalKeyboardKey.shift);
             },
           ),
           EscapeIntent: CallbackAction<EscapeIntent>(
             onInvoke: (intent) {
               debugPrint("escape intent");
-              IFocusableWidget? widget =
-                  Provider.of<AppState>(context, listen: false)
-                      .getScreenWidgetHandler();
+              AppState state = Provider.of<AppState>(context, listen: false);
+              IFocusableWidget? widget = state.getScreenWidgetHandler();
               widget?.handle(LogicalKeyboardKey.escape);
             },
           ),
@@ -81,17 +99,27 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Focus(
+        key: Key("FOCUS"),
         autofocus: true,
         child: Column(
+          key: Key("COLUMN"),
           children: [
             const Center(child: Text("Home")),
             Expanded(
+              key: Key("EXPANDED"),
               flex: 1,
               child: Center(
-                child: MaterialButton(
-                  onPressed: () => Navigator.pushNamed(context, "income"),
-                  child: const Text("Income"),
-                  color: Colors.blue,
+                key: Key("CENTER"),
+                child: GestureDetector(
+                  key: UniqueKey(),
+                  child: EditableText(
+                    key: GlobalKey(debugLabel: "EXITTEXT"),
+                    focusNode: FocusNode(debugLabel: "TEXTFIELD_FOCUS_NODE"),
+                    backgroundCursorColor: Colors.black,
+                    controller: TextEditingController(),
+                    cursorColor: Colors.black,
+                    style: TextStyle(),
+                  ),
                 ),
               ),
             ),

@@ -1,11 +1,14 @@
+import 'dart:collection';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class StackStructure<E> {
-  StackStructure() : _storage = <E>[];
-  final List<E> _storage;
+class FocusableWidgetStackStructure {
+  FocusableWidgetStackStructure() : _storage = <FocusableWidgetStack>[];
+  final List<FocusableWidgetStack> _storage;
 
-  void push(E element) {
+  void push(FocusableWidgetStack element) {
     _storage.add(element);
   }
 
@@ -13,7 +16,7 @@ class StackStructure<E> {
     return _storage.length;
   }
 
-  E? pop() {
+  FocusableWidgetStack? pop() {
     if (_storage.isNotEmpty) {
       return _storage.removeLast();
     }
@@ -21,11 +24,42 @@ class StackStructure<E> {
     return null;
   }
 
-  E? peek() {
+  FocusableWidgetStack? getActive() {
+    for (var element in _storage) {
+      if (element.isActive) {
+        return element;
+      }
+    }
+  }
+
+  void setActive(IFocusableWidget widget) {
+    _storage.where((element) => element.isActive).forEach((element) {
+      element.setInactive();
+    });
+
+    _storage.singleWhere((element) => element.widget == widget).setActive();
+  }
+
+  FocusableWidgetStack? peek() {
     if (_storage.isNotEmpty) {
       return _storage.last;
     }
     return null;
+  }
+}
+
+class FocusableWidgetStack {
+  final IFocusableWidget widget;
+  bool isActive = false;
+
+  FocusableWidgetStack(this.widget);
+
+  void setActive() {
+    isActive = true;
+  }
+
+  void setInactive() {
+    isActive = false;
   }
 }
 
@@ -43,41 +77,62 @@ class AppState extends ChangeNotifier {
     _screens[screen] = handler;
   }
 
+  void addNavigationListener(VoidCallback callback) {
+    _screens[_currentScreen]?.setNavigationListener(callback);
+  }
+
   IFocusableWidget? getScreenWidgetHandler() {
     return _screens[_currentScreen]?.getWidgetHandler();
   }
 }
 
 class ExpenseState extends ChangeNotifier implements IScreenFocusStateHandler {
-  StackStructure<IFocusableWidget> widgets = StackStructure();
+  FocusableWidgetStackStructure widgets = FocusableWidgetStackStructure();
+
+  VoidCallback? navigationListener;
 
   @override
   IFocusableWidget? getWidgetHandler() {
     debugPrint('ExpenseState getWidgetHandler');
-    IFocusableWidget? value = widgets.peek();
+    IFocusableWidget? value = widgets.getActive()?.widget;
     return value;
   }
 
   @override
   IFocusableWidget? pop(BuildContext context) {
     debugPrint('ExpenseState pop');
-    IFocusableWidget? value = widgets.pop();
-    IFocusableWidget? current = widgets.peek();
-    current?.focus();
+    if (navigationListener != null) {
+      navigationListener!.call();
+    }
+    /*
+IFocusableWidget? current = widgets.peek()?.widget;
     if (current == null) {
       Navigator.pop(context);
+    } else {
+      widgets.setActive(current);
+      current.focus();
     }
 
-    return value;
+    return current;
+    */
   }
 
   @override
   void push(IFocusableWidget widget) {
     debugPrint('ExpenseState push widgets count is ${widgets.count()}');
+    FocusableWidgetStack stack = FocusableWidgetStack(widget);
     if (widgets.count() == 0) {
-      widget.focus();
+      stack.setActive();
     }
-    widgets.push(widget);
+    widgets.push(stack);
+  }
+
+  @override
+  void next() {}
+
+  @override
+  void setNavigationListener(VoidCallback action) {
+    navigationListener = action;
   }
 }
 
@@ -86,6 +141,10 @@ abstract class IScreenFocusStateHandler {
 
   void push(IFocusableWidget widget);
   IFocusableWidget? pop(BuildContext context);
+
+  void setNavigationListener(VoidCallback action);
+
+  void next();
 }
 
 abstract class IFocusableWidget {
